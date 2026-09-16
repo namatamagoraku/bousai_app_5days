@@ -5,22 +5,26 @@
   <title>{% block title %}防災アプリ{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body>
+<body class="{% if request.path == '/' %}home-page{% endif %}">
   <!-- ヘッダー -->
-  <h1>防災アプリ</h1>
+  <header class="app-header">
+    <h1>防災アプリ</h1>
+    {% if request.path == '/' %}
+      <button class="menu-button" type="button" aria-label="メニュー" aria-controls="homeMenu" aria-expanded="false">☰</button>
+    {% endif %}
+  </header>
 
   <!-- ナビゲーション -->
-  <nav>
-    <a href="/">ホーム</a> |
-    <a href="/shelter_search">避難所検索</a> |
-    <a href="/shelter_register">避難所登録</a> |
+  <nav id="homeMenu" class="app-nav">
+    <a href="/">ホーム</a>
+    <a href="/shelter_search">避難所検索</a>
+    <a href="/shelter_register">避難所登録</a>
     <a href="/board">指示・発信ボード</a>
-    ｜
     {% if session.logged_in %}
-      ログイン中{% if session.username %}（{{ session.username }}）{% endif %}
+      <span class="nav-status">ログイン中{% if session.username %}（{{ session.username }}）{% endif %}</span>
       <a href="/logout">ログアウト</a>
     {% else %}
-      未ログイン
+      <span class="nav-status">未ログイン</span>
       <a href="/login">ログイン</a>
     {% endif %}
   </nav>
@@ -30,5 +34,19 @@
     <!-- ここに子テンプレートの content が入る -->
     {% block content %}{% endblock %}
   </main>
+
+  {% if request.path == '/' %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const menuButton = document.querySelector('.menu-button');
+      const menu = document.getElementById('homeMenu');
+
+      menuButton.addEventListener('click', function() {
+        const isOpen = menu.classList.toggle('is-open');
+        menuButton.setAttribute('aria-expanded', String(isOpen));
+      });
+    });
+  </script>
+  {% endif %}
 </body>
 </html>
