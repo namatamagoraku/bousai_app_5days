@@ -1,8 +1,283 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>避難所検索</h2>
-<p>登録されている避難所を確認できます。</p>
+<style>
+	.shelter-search-page {
+		box-sizing: border-box;
+		max-width: 900px;
+		margin: 0 auto;
+		padding: 28px 20px 56px;
+		color: #202020;
+		font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+	}
 
-<p><a href="/all_shelters">全施設一覧</a></p>
+	.shelter-search-page-body {
+		margin: 0;
+	}
+
+	.shelter-search-page-body .app-header {
+		display: none;
+	}
+
+	.shelter-search-page-body .app-nav {
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		min-height: 60px;
+		padding: 3px 32px;
+		border: 1px solid #333;
+		background: #d5efff;
+	}
+
+	.shelter-search-page-body .nav-page-title {
+		margin-right: 8px;
+		color: #111;
+		font-size: 24px;
+		white-space: nowrap;
+	}
+
+	.shelter-search-page-body .app-nav a {
+		padding: 6px 13px;
+		border: 1px solid #333;
+		border-radius: 18px;
+		background: #fff9dc;
+		color: #111;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.shelter-search-page-body .app-nav a:hover {
+		background: #fff0ad;
+	}
+
+	.shelter-search-page-body .nav-status,
+	.shelter-search-page-body > hr {
+		display: none;
+	}
+
+	.shelter-search-page-body main {
+		border: 1px solid #333;
+		border-top: 0;
+	}
+
+	.shelter-search-page h2 {
+		margin: 0 -20px 28px;
+		padding: 13px 30px;
+		border: 1px solid #333;
+		background: #d5efff;
+		font-size: 26px;
+		font-weight: 400;
+	}
+
+	.search-instruction {
+		margin: 0 0 24px;
+		font-size: 22px;
+	}
+
+	.search-form {
+		display: grid;
+		grid-template-columns: 190px 215px 1fr;
+		align-items: center;
+		gap: 16px 14px;
+	}
+
+	.search-form label {
+		justify-self: end;
+		font-size: 22px;
+	}
+
+	.search-form label[for="pet-allowed"] {
+		grid-column: 1;
+		justify-self: start;
+	}
+
+	.search-form input,
+	.search-form select {
+		box-sizing: border-box;
+		width: 215px;
+		height: 40px;
+		padding: 5px 9px;
+		border: 1px solid #aaa;
+		background: #fff;
+		font-size: 15px;
+	}
+
+	.search-form button {
+		box-sizing: border-box;
+		width: 136px;
+		height: 40px;
+		border: 1px solid #aab5be;
+		background: #e0f0fb;
+		color: #333;
+		cursor: pointer;
+		font-size: 14px;
+	}
+
+	.search-form button:hover {
+		background: #cce6f6;
+	}
+
+	.zip-row,
+	.address-row {
+		display: contents;
+	}
+
+	.extra-heading {
+		grid-column: 1 / -1;
+		margin: 0 0 -5px;
+		font-size: 22px;
+	}
+
+	.pet-option {
+		 grid-column: 2;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		justify-self: start;
+		font-size: 15px;
+	}
+
+	.pet-option input {
+		width: auto;
+		height: auto;
+		 margin: 0;
+		 accent-color: #2859aa;
+	}
+
+	 .search-form #barrier-free {
+		 grid-column: 2;
+		 width: 192px;
+		 height: 35px;
+	 }
+
+	.search-form .submit-button {
+		grid-column: 3;
+		justify-self: start;
+	}
+
+	@media (max-width: 700px) {
+		.shelter-search-page-body .app-nav {
+			flex-wrap: wrap;
+			padding: 8px 12px;
+		}
+
+		.shelter-search-page-body .nav-page-title {
+			width: 100%;
+		}
+
+		.shelter-search-page h2 {
+			margin-right: -20px;
+			margin-left: -20px;
+			padding-left: 20px;
+		}
+
+		.search-instruction {
+			font-size: 18px;
+		}
+
+		.search-form {
+			grid-template-columns: 1fr;
+			gap: 8px;
+		}
+
+		.search-form label {
+			justify-self: start;
+			font-size: 19px;
+		}
+
+		.search-form input,
+		.search-form select,
+		.search-form button {
+			width: 100%;
+		}
+
+		.search-form .pet-option,
+		.search-form #barrier-free {
+			grid-column: 1;
+		}
+
+		.search-form .submit-button {
+			grid-column: 1;
+		}
+	}
+</style>
+
+<div class="shelter-search-page">
+	<h2>避難所検索</h2>
+	<p class="search-instruction">現在地周辺の建物名または現在地の郵便番号、住所のいずれかを入力してください</p>
+
+	<form class="search-form" action="{{ url_for('search_results') }}" method="get">
+		<label for="building-name">建物名</label>
+		<input id="building-name" name="name" type="text" placeholder="（自由入力）">
+		<span></span>
+
+		<label for="postal-code">郵便番号</label>
+		<input id="postal-code" name="postal_code" type="text" inputmode="numeric" pattern="[0-9]{3}-?[0-9]{4}" placeholder="xxx-xxxx">
+		<button id="address-search" type="button">住所検索</button>
+
+		<label for="address">住所</label>
+		<input id="address" name="address" type="text" placeholder="青森市中央1-1">
+		<span></span>
+
+		<label for="capacity">利用人数</label>
+		<select id="capacity" name="capacity">
+			<option value="">選択してください</option>
+			{% for number in range(1, 11) %}
+				<option value="{{ number }}">{{ number }}人</option>
+			{% endfor %}
+		</select>
+		<span></span>
+
+		<p class="extra-heading">その他要望</p>
+		<span></span>
+		<span></span>
+
+		<label for="pet-allowed">ペット受け入れ可</label>
+		<label class="pet-option" for="pet-allowed">
+			<input id="pet-allowed" name="pet_allowed" value="yes" type="checkbox">
+			チェックする
+		</label>
+		<span></span>
+
+		<label for="barrier-free">バリアフリー対応</label>
+		<select id="barrier-free" name="barrier_free">
+			<option value="">選択してください</option>
+			<option value="yes">対応している</option>
+			<option value="no">対応していない</option>
+		</select>
+		<button class="submit-button" type="submit">検索</button>
+	</form>
+</div>
+
+<script>
+document.getElementById('address-search').addEventListener('click', function() {
+	const postalCode = document.getElementById('postal-code').value.replace(/[^0-9]/g, '');
+	const address = document.getElementById('address');
+
+	if (postalCode.length !== 7) {
+		address.value = '';
+		address.placeholder = '郵便番号を7桁で入力してください';
+		return;
+	}
+
+	address.placeholder = '住所を検索中...';
+	fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${postalCode}`)
+		.then(response => response.json())
+		.then(data => {
+			if (!data.results || data.results.length === 0) {
+				address.value = '';
+				address.placeholder = '住所が見つかりませんでした';
+				return;
+			}
+			const result = data.results[0];
+			address.value = `${result.address1}${result.address2}${result.address3}`;
+			address.placeholder = '住所';
+		})
+		.catch(() => {
+			address.placeholder = '住所検索に失敗しました';
+		});
+});
+</script>
+
 {% endblock %}

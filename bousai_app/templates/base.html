@@ -5,10 +5,10 @@
   <title>{% block title %}防災アプリ{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body class="{% if request.path == '/' %}home-page{% endif %}">
+<body class="{% if request.path == '/' %}home-page{% elif request.path == '/shelter_search' %}shelter-search-page-body{% endif %}">
   <!-- ヘッダー -->
   <header class="app-header">
-    <h1>防災アプリ</h1>
+    <h1>{% if request.path == '/shelter_search' %}避難所検索{% else %}防災アプリ{% endif %}</h1>
     {% if request.path == '/' %}
       <button class="menu-button" type="button" aria-label="メニュー" aria-controls="homeMenu" aria-expanded="false">☰</button>
     {% endif %}
@@ -16,6 +16,7 @@
 
   <!-- ナビゲーション -->
   <nav id="homeMenu" class="app-nav">
+    {% if request.path == '/shelter_search' %}<span class="nav-page-title">避難所検索</span>{% endif %}
     <a href="/">ホーム</a>
     <a href="/shelter_search">避難所検索</a>
     <a href="/shelter_register">避難所登録</a>

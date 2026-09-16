@@ -145,9 +145,39 @@ def format_report_time(iso_str):
         return iso_str
 
 
-def filter_shelters(district=None):
-    """district 指定があれば一致する避難所のみ、なければ全件を返す"""
-    return [s for s in shelters if not district or s.get('district') == district]
+def filter_shelters(district=None, name=None, postal_code=None, address=None,
+                    capacity=None, pet_allowed=None, barrier_free=None):
+    """指定された条件に一致する避難所を返す"""
+    results = [s for s in shelters if not district or s.get('district') == district]
+
+    if name:
+        results = [s for s in results if name in s.get('name', '')]
+    if postal_code:
+        normalized_postal_code = postal_code.replace('-', '')
+        results = [
+            s for s in results
+            if normalized_postal_code in s.get('postal_code', '').replace('-', '')
+        ]
+    if address:
+        results = [
+            s for s in results
+            if address in s.get('address', '') or address in s.get('postal_code', '')
+        ]
+    if capacity:
+        results = [
+            s for s in results
+            if not s.get('capacity') or int(s['capacity']) >= int(capacity)
+        ]
+    if pet_allowed == 'yes':
+        results = [s for s in results if s.get('pet_allowed') is not False]
+    if barrier_free in ('yes', 'no'):
+        expected = barrier_free == 'yes'
+        results = [
+            s for s in results
+            if s.get('barrier_free') is None or s.get('barrier_free') is expected
+        ]
+
+    return results
 
 
 def parse_area_warnings(warning_data):
@@ -328,7 +358,15 @@ def board():
 # 検索結果ページ：templates/search_results.html を返す
 @app.route('/search_results')
 def search_results():
-    results = filter_shelters(request.args.get('district'))
+    results = filter_shelters(
+        district=request.args.get('district'),
+        name=request.args.get('name', '').strip(),
+        postal_code=request.args.get('postal_code', '').strip(),
+        address=request.args.get('address', '').strip(),
+        capacity=request.args.get('capacity'),
+        pet_allowed=request.args.get('pet_allowed'),
+        barrier_free=request.args.get('barrier_free')
+    )
     return render_template('search_results.html', results=results)
 
 # JSON API：/shelters?district=地区名
